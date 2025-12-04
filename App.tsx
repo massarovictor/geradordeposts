@@ -553,6 +553,31 @@ export default function App() {
                     <span className="text-[10px] text-gray-500">Usar uma única cor para tudo</span>
                   </label>
                 </div>
+
+                {/* Card Theme Toggle */}
+                <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <span className="text-xs text-gray-600">Tema do Card de Alunos</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => updateConfig({ darkCardMode: false })}
+                      className={`px-3 py-1.5 text-xs rounded-l-lg border transition-colors ${!config.darkCardMode
+                          ? 'bg-white border-gray-300 text-gray-900 font-medium'
+                          : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'
+                        }`}
+                    >
+                      ☀️ Claro
+                    </button>
+                    <button
+                      onClick={() => updateConfig({ darkCardMode: true })}
+                      className={`px-3 py-1.5 text-xs rounded-r-lg border-t border-b border-r transition-colors ${config.darkCardMode
+                          ? 'bg-gray-800 border-gray-700 text-white font-medium'
+                          : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'
+                        }`}
+                    >
+                      🌙 Escuro
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </section>

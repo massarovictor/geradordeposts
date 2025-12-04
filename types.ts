@@ -24,6 +24,7 @@ export interface PageConfig {
   enableBackgroundBlur: boolean;
   applyThemeToAccents: boolean;
   cardLayout: CardLayout;
+  darkCardMode: boolean;
 }
 
 export enum ThemeColor {

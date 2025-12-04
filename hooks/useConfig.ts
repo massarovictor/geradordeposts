@@ -18,6 +18,7 @@ export const defaultConfig: PageConfig = {
     enableBackgroundBlur: true,
     applyThemeToAccents: true,
     cardLayout: CardLayout.GRID_3X3,
+    darkCardMode: false,
 };
 
 export interface UseConfigReturn {
