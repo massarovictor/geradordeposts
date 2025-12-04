@@ -1,0 +1,5 @@
+{
+  "name": "Gerador de Cards Escolares",
+  "description": "Crie cards personalizados para alunos no formato Instagram (4:5) com frases motivacionais geradas por IA.",
+  "requestFramePermissions": []
+}
