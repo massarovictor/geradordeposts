@@ -160,10 +160,9 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
       <div className="h-[72px] flex-shrink-0 z-10 flex flex-col items-center justify-center gap-2">
         {/* Title - Clean, no pill */}
         <h1
-          className="font-display font-bold text-2xl tracking-tight"
+          className="font-display font-semibold text-xl tracking-normal"
           style={{
             color: headerTextColor || '#ffffff',
-            textShadow: '0 2px 8px rgba(0,0,0,0.3)'
           }}
         >
           {config.schoolName || 'Escola'}
