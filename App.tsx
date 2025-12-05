@@ -29,6 +29,7 @@ import { FilterBar } from './components/FilterBar';
 import { LayoutSelector } from './components/LayoutSelector';
 import { StudentList } from './components/StudentList';
 import { StudentForm } from './components/StudentForm';
+import { TabNavigation, TabType } from './components/TabNavigation';
 import { PreviewControls } from './components/PreviewControls';
 
 const STORAGE_KEY = 'student-cards-state-v2';
@@ -80,6 +81,7 @@ export default function App() {
   const { filters, setYearFilter, setCourseFilter, clearFilters, filterStudents, hasActiveFilters } = useFilters();
 
   // Local state
+  const [activeTab, setActiveTab] = useState<TabType>('visual');
   const [currentPage, setCurrentPage] = useState(savedState.currentPage);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
@@ -89,7 +91,7 @@ export default function App() {
   const [importMode, setImportMode] = useState<ImportMode>('append');
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [isExportingAll, setIsExportingAll] = useState(false);
-  const [previewScale, setPreviewScale] = useState(1);
+  const [previewScale, setPreviewScale] = useState(0.85);
   const [showMobileFrame, setShowMobileFrame] = useState(false);
 
   // Refs
@@ -359,363 +361,376 @@ export default function App() {
           <p className="text-xs text-gray-500">Visual Minimalista / Liquid Glass</p>
         </div>
 
+        {/* Tab Navigation */}
+        <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+
         {/* Scrollable Form Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
-          {/* Layout Selector */}
-          <LayoutSelector
-            currentLayout={config.cardLayout || CardLayout.GRID_3X3}
-            onLayoutChange={setLayout}
-          />
+          {/* TAB: VISUAL & ESCOLA */}
+          {activeTab === 'visual' && (
+            <div className="space-y-6 animate-fadeIn">
+              {/* Layout Selector */}
+              <LayoutSelector
+                currentLayout={config.cardLayout || CardLayout.GRID_3X3}
+                onLayoutChange={setLayout}
+              />
 
-          {/* Appearance Section */}
-          <section className="space-y-5">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Aparência & Configuração</h3>
+              {/* Appearance Section */}
+              <section className="space-y-5">
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Aparência & Configuração</h3>
 
-            <div className="grid grid-cols-1 gap-4">
-              {/* Logos & Backgrounds Row */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* LOGO */}
-                <div>
-                  <label className="text-xs font-medium text-gray-700 block mb-1">Brasão / Logo</label>
-                  <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 rounded-md border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center flex-shrink-0">
-                      {config.logoUrl ? (
-                        <img src={config.logoUrl} alt="Logo" className="w-full h-full object-contain" />
-                      ) : (
-                        <span className="text-[9px] text-gray-400">Vazio</span>
-                      )}
+                <div className="grid grid-cols-1 gap-4">
+                  {/* Logos & Backgrounds Row */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* LOGO */}
+                    <div>
+                      <label className="text-xs font-medium text-gray-700 block mb-1">Brasão / Logo</label>
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-md border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center flex-shrink-0">
+                          {config.logoUrl ? (
+                            <img src={config.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                          ) : (
+                            <span className="text-[9px] text-gray-400">Vazio</span>
+                          )}
+                        </div>
+                        <label className="cursor-pointer flex-1">
+                          <span className="block w-full text-center bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-[10px] py-2 px-1 rounded-md shadow-sm transition-colors">
+                            Carregar
+                          </span>
+                          <input type="file" className="hidden" accept="image/*" ref={logoInputRef} onChange={handleLogoUpload} />
+                        </label>
+                        {config.logoUrl && (
+                          <button onClick={() => updateConfig({ logoUrl: null })} className="text-gray-400 hover:text-red-500">
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <label className="cursor-pointer flex-1">
-                      <span className="block w-full text-center bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-[10px] py-2 px-1 rounded-md shadow-sm transition-colors">
-                        Carregar
-                      </span>
-                      <input type="file" className="hidden" accept="image/*" ref={logoInputRef} onChange={handleLogoUpload} />
-                    </label>
-                    {config.logoUrl && (
-                      <button onClick={() => updateConfig({ logoUrl: null })} className="text-gray-400 hover:text-red-500">
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
-                    )}
+
+                    {/* BACKGROUND IMAGE */}
+                    <div>
+                      <label className="text-xs font-medium text-gray-700 block mb-1">Fundo (Textura)</label>
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-md border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center flex-shrink-0">
+                          {config.backgroundImageUrl ? (
+                            <img src={config.backgroundImageUrl} alt="BG" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-[9px] text-gray-400">Vazio</span>
+                          )}
+                        </div>
+                        <label className="cursor-pointer flex-1">
+                          <span className="block w-full text-center bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-[10px] py-2 px-1 rounded-md shadow-sm transition-colors">
+                            Carregar
+                          </span>
+                          <input type="file" className="hidden" accept="image/*" ref={bgInputRef} onChange={handleBackgroundUpload} />
+                        </label>
+                        {config.backgroundImageUrl && (
+                          <button onClick={() => updateConfig({ backgroundImageUrl: null })} className="text-gray-400 hover:text-red-500">
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-gray-700">Título cabeçalho</label>
+                    <input
+                      type="text"
+                      className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                      value={config.schoolName}
+                      onChange={(e) => updateConfig({ schoolName: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-medium text-gray-700">Título Rodapé</label>
+                      <input
+                        type="text"
+                        className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                        value={config.footerTitle}
+                        onChange={(e) => updateConfig({ footerTitle: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-700">Subtítulo</label>
+                      <input
+                        type="text"
+                        className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                        value={config.footerSubtitle}
+                        onChange={(e) => updateConfig({ footerSubtitle: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Visual Options */}
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <label className="flex items-center gap-1 cursor-pointer" title="Aplicar desfoque na imagem de fundo">
+                        <input
+                          type="checkbox"
+                          className="rounded text-emerald-600 focus:ring-emerald-500 w-3 h-3"
+                          checked={config.enableBackgroundBlur}
+                          onChange={(e) => updateConfig({ enableBackgroundBlur: e.target.checked })}
+                        />
+                        <span className="text-[10px] text-gray-500">Desfocar</span>
+                      </label>
+                      <label className="flex items-center gap-1 cursor-pointer" title="Misturar cor do tema com a imagem">
+                        <input
+                          type="checkbox"
+                          className="rounded text-emerald-600 focus:ring-emerald-500 w-3 h-3"
+                          checked={config.enableThemeOverlay}
+                          onChange={(e) => updateConfig({ enableThemeOverlay: e.target.checked })}
+                        />
+                        <span className="text-[10px] text-gray-500">Tingir</span>
+                      </label>
+                      <label className="flex items-center gap-1 cursor-pointer" title="Aplicar a cor do tema em textos/bordas/pills">
+                        <input
+                          type="checkbox"
+                          className="rounded text-emerald-600 focus:ring-emerald-500 w-3 h-3"
+                          checked={config.applyThemeToAccents}
+                          onChange={(e) => updateConfig({ applyThemeToAccents: e.target.checked })}
+                        />
+                        <span className="text-[10px] text-gray-500">Detalhes</span>
+                      </label>
+                    </div>
+
+                    {/* Theme Colors */}
+                    <div className="flex flex-wrap gap-2">
+                      {themes.map((t) => (
+                        <button
+                          key={t.id}
+                          onClick={() => updateConfig({ themeColor: t.id })}
+                          className={`w-8 h-8 rounded-full ${t.color} ring-offset-2 transition-all shadow-sm ${config.themeColor === t.id ? 'ring-2 ring-gray-400 scale-110' : 'opacity-70 hover:opacity-100 hover:scale-105'
+                            }`}
+                          title={t.label}
+                        />
+                      ))}
+
+                      <label
+                        className={`w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 via-purple-500 to-blue-500 ring-offset-2 transition-all shadow-sm flex items-center justify-center cursor-pointer ${config.themeColor === ThemeColor.CUSTOM ? 'ring-2 ring-gray-400 scale-110' : 'opacity-70 hover:opacity-100 hover:scale-105'
+                          }`}
+                      >
+                        <SwatchIcon className="w-4 h-4 text-white" />
+                        <input
+                          type="color"
+                          className="opacity-0 w-0 h-0 absolute"
+                          value={config.customThemeColor || '#000000'}
+                          onChange={(e) =>
+                            updateConfig({
+                              themeColor: ThemeColor.CUSTOM,
+                              customThemeColor: e.target.value,
+                              customAccentColor: config.useSingleCustomColor ? e.target.value : config.customAccentColor,
+                            })
+                          }
+                        />
+                      </label>
+                    </div>
+
+                    {/* Color Pickers */}
+                    <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] text-gray-600">
+                      <label className="flex items-center gap-2">
+                        <span className="w-32">Cor do cabeçalho</span>
+                        <input
+                          type="color"
+                          value={config.headerTitleColor || '#0f172a'}
+                          onChange={(e) => updateConfig({ headerTitleColor: e.target.value })}
+                          className="w-10 h-6 border rounded"
+                        />
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <span className="w-32">Cor do rodapé</span>
+                        <input
+                          type="color"
+                          value={config.footerTitleColor || '#ffffff'}
+                          onChange={(e) => updateConfig({ footerTitleColor: e.target.value })}
+                          className="w-10 h-6 border rounded"
+                        />
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <span className="w-32">Cor do Subtítulo</span>
+                        <input
+                          type="color"
+                          value={config.subtitleColor || '#0f172a'}
+                          onChange={(e) => updateConfig({ subtitleColor: e.target.value })}
+                          className="w-10 h-6 border rounded"
+                        />
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <span className="w-28">Cor do fundo</span>
+                        <input
+                          type="color"
+                          value={config.customThemeColor || '#000000'}
+                          onChange={(e) =>
+                            updateConfig({
+                              themeColor: ThemeColor.CUSTOM,
+                              customThemeColor: e.target.value,
+                              customAccentColor: config.useSingleCustomColor ? e.target.value : config.customAccentColor,
+                            })
+                          }
+                          className="w-10 h-6 border rounded"
+                          title="Cor usada para tingir o fundo quando o tema é personalizado"
+                        />
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <span className="w-32">Cor dos detalhes</span>
+                        <input
+                          type="color"
+                          value={(config.useSingleCustomColor ? config.customThemeColor : config.customAccentColor) || '#000000'}
+                          disabled={config.useSingleCustomColor}
+                          onChange={(e) =>
+                            updateConfig({
+                              themeColor: ThemeColor.CUSTOM,
+                              customAccentColor: e.target.value,
+                            })
+                          }
+                          className="w-10 h-6 border rounded disabled:opacity-60"
+                          title="Textos, bordas e pills quando o tema é personalizado"
+                        />
+                      </label>
+                      <label className="flex items-center gap-2 sm:col-span-2">
+                        <input
+                          type="checkbox"
+                          className="rounded text-emerald-600 focus:ring-emerald-500 w-3 h-3"
+                          checked={config.useSingleCustomColor}
+                          onChange={(e) =>
+                            updateConfig({
+                              useSingleCustomColor: e.target.checked,
+                              customAccentColor: e.target.checked ? config.customThemeColor : config.customAccentColor,
+                            })
+                          }
+                        />
+                        <span className="text-[10px] text-gray-500">Usar uma única cor para tudo</span>
+                      </label>
+                    </div>
+
+                    {/* Card Theme Toggle */}
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                      <span className="text-xs text-gray-600">Tema do Card de Alunos</span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => updateConfig({ darkCardMode: false })}
+                          className={`px-3 py-1.5 text-xs rounded-l-lg border transition-colors ${!config.darkCardMode
+                            ? 'bg-white border-gray-300 text-gray-900 font-medium'
+                            : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'
+                            }`}
+                        >
+                          ☀️ Claro
+                        </button>
+                        <button
+                          onClick={() => updateConfig({ darkCardMode: true })}
+                          className={`px-3 py-1.5 text-xs rounded-r-lg border-t border-b border-r transition-colors ${config.darkCardMode
+                            ? 'bg-gray-800 border-gray-700 text-white font-medium'
+                            : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'
+                            }`}
+                        >
+                          🌙 Escuro
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
+              </section>
+            </div>
+          )}
 
-                {/* BACKGROUND IMAGE */}
-                <div>
-                  <label className="text-xs font-medium text-gray-700 block mb-1">Fundo (Textura)</label>
-                  <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 rounded-md border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center flex-shrink-0">
-                      {config.backgroundImageUrl ? (
-                        <img src={config.backgroundImageUrl} alt="BG" className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-[9px] text-gray-400">Vazio</span>
-                      )}
-                    </div>
-                    <label className="cursor-pointer flex-1">
-                      <span className="block w-full text-center bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-[10px] py-2 px-1 rounded-md shadow-sm transition-colors">
-                        Carregar
-                      </span>
-                      <input type="file" className="hidden" accept="image/*" ref={bgInputRef} onChange={handleBackgroundUpload} />
-                    </label>
-                    {config.backgroundImageUrl && (
-                      <button onClick={() => updateConfig({ backgroundImageUrl: null })} className="text-gray-400 hover:text-red-500">
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
+          {/* TAB: ALUNOS */}
+          {activeTab === 'students' && (
+            <div className="space-y-6 animate-fadeIn">
+              {/* Import Section */}
+              <section className="space-y-3 p-4 rounded-xl border border-blue-100 bg-blue-50/50">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-blue-800 flex-1">Importação em Lote (Excel)</h3>
+                  <span className="text-[10px] text-blue-700 bg-white px-2 py-0.5 rounded-full border border-blue-100">
+                    Modo: {importMode === 'append' ? 'Anexar' : 'Sobrescrever'}
+                  </span>
                 </div>
-              </div>
+                <p className="text-[10px] text-blue-700">Baixe o modelo, preencha e escolha se quer anexar ou substituir.</p>
 
-              <div>
-                <label className="text-xs font-medium text-gray-700">Título cabeçalho</label>
-                <input
-                  type="text"
-                  className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-                  value={config.schoolName}
-                  onChange={(e) => updateConfig({ schoolName: e.target.value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs font-medium text-gray-700">Título Rodapé</label>
-                  <input
-                    type="text"
-                    className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                    value={config.footerTitle}
-                    onChange={(e) => updateConfig({ footerTitle: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-700">Subtítulo</label>
-                  <input
-                    type="text"
-                    className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                    value={config.footerSubtitle}
-                    onChange={(e) => updateConfig({ footerSubtitle: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              {/* Visual Options */}
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-3">
-                  <label className="flex items-center gap-1 cursor-pointer" title="Aplicar desfoque na imagem de fundo">
-                    <input
-                      type="checkbox"
-                      className="rounded text-emerald-600 focus:ring-emerald-500 w-3 h-3"
-                      checked={config.enableBackgroundBlur}
-                      onChange={(e) => updateConfig({ enableBackgroundBlur: e.target.checked })}
-                    />
-                    <span className="text-[10px] text-gray-500">Desfocar</span>
-                  </label>
-                  <label className="flex items-center gap-1 cursor-pointer" title="Misturar cor do tema com a imagem">
-                    <input
-                      type="checkbox"
-                      className="rounded text-emerald-600 focus:ring-emerald-500 w-3 h-3"
-                      checked={config.enableThemeOverlay}
-                      onChange={(e) => updateConfig({ enableThemeOverlay: e.target.checked })}
-                    />
-                    <span className="text-[10px] text-gray-500">Tingir</span>
-                  </label>
-                  <label className="flex items-center gap-1 cursor-pointer" title="Aplicar a cor do tema em textos/bordas/pills">
-                    <input
-                      type="checkbox"
-                      className="rounded text-emerald-600 focus:ring-emerald-500 w-3 h-3"
-                      checked={config.applyThemeToAccents}
-                      onChange={(e) => updateConfig({ applyThemeToAccents: e.target.checked })}
-                    />
-                    <span className="text-[10px] text-gray-500">Detalhes</span>
-                  </label>
-                </div>
-
-                {/* Theme Colors */}
-                <div className="flex flex-wrap gap-2">
-                  {themes.map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => updateConfig({ themeColor: t.id })}
-                      className={`w-8 h-8 rounded-full ${t.color} ring-offset-2 transition-all shadow-sm ${config.themeColor === t.id ? 'ring-2 ring-gray-400 scale-110' : 'opacity-70 hover:opacity-100 hover:scale-105'
-                        }`}
-                      title={t.label}
-                    />
-                  ))}
-
-                  <label
-                    className={`w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 via-purple-500 to-blue-500 ring-offset-2 transition-all shadow-sm flex items-center justify-center cursor-pointer ${config.themeColor === ThemeColor.CUSTOM ? 'ring-2 ring-gray-400 scale-110' : 'opacity-70 hover:opacity-100 hover:scale-105'
-                      }`}
+                <div className="flex gap-2 mt-1">
+                  <button
+                    onClick={downloadTemplate}
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-blue-200 text-blue-700 text-xs py-2 rounded-lg hover:bg-blue-50 transition-colors shadow-sm"
                   >
-                    <SwatchIcon className="w-4 h-4 text-white" />
-                    <input
-                      type="color"
-                      className="opacity-0 w-0 h-0 absolute"
-                      value={config.customThemeColor || '#000000'}
-                      onChange={(e) =>
-                        updateConfig({
-                          themeColor: ThemeColor.CUSTOM,
-                          customThemeColor: e.target.value,
-                          customAccentColor: config.useSingleCustomColor ? e.target.value : config.customAccentColor,
-                        })
-                      }
-                    />
+                    <DocumentArrowDownIcon className="w-4 h-4" />
+                    Baixar Modelo
+                  </button>
+
+                  <label className="flex-1 flex items-center justify-center gap-1.5 bg-blue-600 text-white text-xs py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer shadow-sm">
+                    <DocumentArrowUpIcon className="w-4 h-4" />
+                    Importar
+                    <input type="file" accept=".xlsx, .xls, .csv" className="hidden" ref={importInputRef} onChange={handleImportSheet} />
                   </label>
                 </div>
 
-                {/* Color Pickers */}
-                <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] text-gray-600">
-                  <label className="flex items-center gap-2">
-                    <span className="w-32">Cor do cabeçalho</span>
+                <div className="flex items-center gap-3 text-[11px] text-blue-800">
+                  <label className="flex items-center gap-1">
                     <input
-                      type="color"
-                      value={config.headerTitleColor || '#0f172a'}
-                      onChange={(e) => updateConfig({ headerTitleColor: e.target.value })}
-                      className="w-10 h-6 border rounded"
+                      type="radio"
+                      name="import-mode"
+                      className="text-blue-600"
+                      checked={importMode === 'append'}
+                      onChange={() => setImportMode('append')}
                     />
+                    Anexar à lista
                   </label>
-                  <label className="flex items-center gap-2">
-                    <span className="w-32">Cor do rodapé</span>
+                  <label className="flex items-center gap-1">
                     <input
-                      type="color"
-                      value={config.footerTitleColor || '#ffffff'}
-                      onChange={(e) => updateConfig({ footerTitleColor: e.target.value })}
-                      className="w-10 h-6 border rounded"
+                      type="radio"
+                      name="import-mode"
+                      className="text-blue-600"
+                      checked={importMode === 'replace'}
+                      onChange={() => setImportMode('replace')}
                     />
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <span className="w-32">Cor do Subtítulo</span>
-                    <input
-                      type="color"
-                      value={config.subtitleColor || '#0f172a'}
-                      onChange={(e) => updateConfig({ subtitleColor: e.target.value })}
-                      className="w-10 h-6 border rounded"
-                    />
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <span className="w-28">Cor do fundo</span>
-                    <input
-                      type="color"
-                      value={config.customThemeColor || '#000000'}
-                      onChange={(e) =>
-                        updateConfig({
-                          themeColor: ThemeColor.CUSTOM,
-                          customThemeColor: e.target.value,
-                          customAccentColor: config.useSingleCustomColor ? e.target.value : config.customAccentColor,
-                        })
-                      }
-                      className="w-10 h-6 border rounded"
-                      title="Cor usada para tingir o fundo quando o tema é personalizado"
-                    />
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <span className="w-32">Cor dos detalhes</span>
-                    <input
-                      type="color"
-                      value={(config.useSingleCustomColor ? config.customThemeColor : config.customAccentColor) || '#000000'}
-                      disabled={config.useSingleCustomColor}
-                      onChange={(e) =>
-                        updateConfig({
-                          themeColor: ThemeColor.CUSTOM,
-                          customAccentColor: e.target.value,
-                        })
-                      }
-                      className="w-10 h-6 border rounded disabled:opacity-60"
-                      title="Textos, bordas e pills quando o tema é personalizado"
-                    />
-                  </label>
-                  <label className="flex items-center gap-2 sm:col-span-2">
-                    <input
-                      type="checkbox"
-                      className="rounded text-emerald-600 focus:ring-emerald-500 w-3 h-3"
-                      checked={config.useSingleCustomColor}
-                      onChange={(e) =>
-                        updateConfig({
-                          useSingleCustomColor: e.target.checked,
-                          customAccentColor: e.target.checked ? config.customThemeColor : config.customAccentColor,
-                        })
-                      }
-                    />
-                    <span className="text-[10px] text-gray-500">Usar uma única cor para tudo</span>
+                    Sobrescrever
                   </label>
                 </div>
+              </section>
 
-                {/* Card Theme Toggle */}
-                <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                  <span className="text-xs text-gray-600">Tema do Card de Alunos</span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => updateConfig({ darkCardMode: false })}
-                      className={`px-3 py-1.5 text-xs rounded-l-lg border transition-colors ${!config.darkCardMode
-                        ? 'bg-white border-gray-300 text-gray-900 font-medium'
-                        : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'
-                        }`}
-                    >
-                      ☀️ Claro
-                    </button>
-                    <button
-                      onClick={() => updateConfig({ darkCardMode: true })}
-                      className={`px-3 py-1.5 text-xs rounded-r-lg border-t border-b border-r transition-colors ${config.darkCardMode
-                        ? 'bg-gray-800 border-gray-700 text-white font-medium'
-                        : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'
-                        }`}
-                    >
-                      🌙 Escuro
-                    </button>
-                  </div>
-                </div>
-              </div>
+              {/* Student Form */}
+              <StudentForm
+                isEditing={!!editingId}
+                name={newName}
+                selectedYear={selectedYear}
+                selectedCourse={selectedCourse}
+                imagePreview={newImage}
+                onNameChange={setNewName}
+                onYearChange={setSelectedYear}
+                onCourseChange={setSelectedCourse}
+                onImageChange={setNewImage}
+                onSubmit={handleAddOrUpdate}
+                onCancel={cancelEdit}
+                studentCount={students.length}
+              />
+
+              {/* Filters */}
+              <FilterBar
+                filters={filters}
+                onYearChange={setYearFilter}
+                onCourseChange={setCourseFilter}
+                onClear={clearFilters}
+                hasActiveFilters={hasActiveFilters}
+                totalCount={students.length}
+                filteredCount={filteredStudents.length}
+              />
+
+              {/* Student List */}
+              <StudentList
+                students={filteredStudents}
+                editingId={editingId}
+                onEdit={startEditing}
+                onRemove={removeStudent}
+                onMove={moveStudent}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+                dragIndex={dragIndex}
+                onClearAll={clearAll}
+              />
             </div>
-          </section>
-
-          {/* Import Section */}
-          <section className="space-y-3 p-4 rounded-xl border border-blue-100 bg-blue-50/50">
-            <div className="flex items-center gap-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-blue-800 flex-1">Importação em Lote (Excel)</h3>
-              <span className="text-[10px] text-blue-700 bg-white px-2 py-0.5 rounded-full border border-blue-100">
-                Modo: {importMode === 'append' ? 'Anexar' : 'Sobrescrever'}
-              </span>
-            </div>
-            <p className="text-[10px] text-blue-700">Baixe o modelo, preencha e escolha se quer anexar ou substituir.</p>
-
-            <div className="flex gap-2 mt-1">
-              <button
-                onClick={downloadTemplate}
-                className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-blue-200 text-blue-700 text-xs py-2 rounded-lg hover:bg-blue-50 transition-colors shadow-sm"
-              >
-                <DocumentArrowDownIcon className="w-4 h-4" />
-                Baixar Modelo
-              </button>
-
-              <label className="flex-1 flex items-center justify-center gap-1.5 bg-blue-600 text-white text-xs py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer shadow-sm">
-                <DocumentArrowUpIcon className="w-4 h-4" />
-                Importar
-                <input type="file" accept=".xlsx, .xls, .csv" className="hidden" ref={importInputRef} onChange={handleImportSheet} />
-              </label>
-            </div>
-
-            <div className="flex items-center gap-3 text-[11px] text-blue-800">
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  name="import-mode"
-                  className="text-blue-600"
-                  checked={importMode === 'append'}
-                  onChange={() => setImportMode('append')}
-                />
-                Anexar à lista
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  name="import-mode"
-                  className="text-blue-600"
-                  checked={importMode === 'replace'}
-                  onChange={() => setImportMode('replace')}
-                />
-                Sobrescrever
-              </label>
-            </div>
-          </section>
-
-          {/* Student Form */}
-          <StudentForm
-            isEditing={!!editingId}
-            name={newName}
-            selectedYear={selectedYear}
-            selectedCourse={selectedCourse}
-            imagePreview={newImage}
-            onNameChange={setNewName}
-            onYearChange={setSelectedYear}
-            onCourseChange={setSelectedCourse}
-            onImageChange={setNewImage}
-            onSubmit={handleAddOrUpdate}
-            onCancel={cancelEdit}
-            studentCount={students.length}
-          />
-
-          {/* Filters */}
-          <FilterBar
-            filters={filters}
-            onYearChange={setYearFilter}
-            onCourseChange={setCourseFilter}
-            onClear={clearFilters}
-            hasActiveFilters={hasActiveFilters}
-            totalCount={students.length}
-            filteredCount={filteredStudents.length}
-          />
-
-          {/* Student List */}
-          <StudentList
-            students={filteredStudents}
-            editingId={editingId}
-            onEdit={startEditing}
-            onRemove={removeStudent}
-            onMove={moveStudent}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-            dragIndex={dragIndex}
-            onClearAll={clearAll}
-          />
+          )}
         </div>
       </div>
 

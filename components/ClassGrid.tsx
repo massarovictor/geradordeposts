@@ -130,7 +130,7 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
   return (
     <div
       ref={ref}
-      className="relative w-full aspect-instagram flex flex-col p-5 overflow-hidden"
+      className="relative w-full aspect-instagram flex flex-col p-4 overflow-hidden"
       style={{ minWidth: '400px', maxWidth: '400px' }}
     >
       {/* BACKGROUND */}
@@ -162,7 +162,7 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
       <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/5 via-transparent to-black/20 pointer-events-none" />
 
       {/* HEADER */}
-      <div className="h-[72px] flex-shrink-0 z-10 flex flex-col items-center justify-center gap-2">
+      <div className="h-[60px] flex-shrink-0 z-10 flex flex-col items-center justify-center gap-2">
         {/* Title - Neulis font */}
         <h1
           className="font-display font-bold text-xl tracking-normal"
@@ -188,13 +188,14 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
           <div className="absolute inset-0 z-[-1] overflow-hidden">
             {/* 
                 Positioning logic:
-                The card is inside a p-5 (20px) container.
+                The card is inside a p-4 (16px) container.
+                Header is 60px.
                 To align this inner image with the root background, we need to:
                 1. Make it the size of the root container (400px x 500px).
-                2. Offset it by the padding amount (-20px).
+                2. Offset it by the padding amount (-16px) and header height (-60px).
              */}
             <div
-              className="absolute top-[-72px] left-[-20px] w-[400px] h-[500px]"
+              className="absolute top-[-60px] left-[-16px] w-[400px] h-[500px]"
             >
               <img
                 src={config.backgroundImageUrl!}
@@ -278,7 +279,7 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
       </div>
 
       {/* FOOTER */}
-      <div className="pt-5 pb-2 z-10 flex items-center justify-center gap-2.5">
+      <div className="pt-3 pb-2 z-10 flex items-center justify-center gap-2.5">
         {/* Logo */}
         {config.logoUrl && (
           <img src={config.logoUrl} alt="Logo" className="w-7 h-7 object-contain" />

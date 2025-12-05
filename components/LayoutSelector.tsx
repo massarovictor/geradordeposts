@@ -9,19 +9,19 @@ interface LayoutSelectorProps {
 
 export function LayoutSelector({ currentLayout, onLayoutChange }: LayoutSelectorProps) {
     const layouts = [
-        { id: CardLayout.GRID_2X2, icon: '⊞', gridClass: 'grid-cols-2 grid-rows-2' },
-        { id: CardLayout.GRID_3X2, icon: '⊟', gridClass: 'grid-cols-3 grid-rows-2' },
-        { id: CardLayout.GRID_3X3, icon: '⊞', gridClass: 'grid-cols-3 grid-rows-3' },
+        { id: CardLayout.GRID_2X2, gridClass: 'grid-cols-2 grid-rows-2' },
+        { id: CardLayout.GRID_3X2, gridClass: 'grid-cols-3 grid-rows-2' },
+        { id: CardLayout.GRID_3X3, gridClass: 'grid-cols-3 grid-rows-3' },
     ];
 
     return (
-        <div className="space-y-2">
-            <div className="flex items-center gap-1.5 text-gray-700">
+        <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-gray-500">
                 <Squares2X2Icon className="w-4 h-4" />
-                <span className="text-xs font-medium">Layout do Card</span>
+                <span className="text-xs font-medium">Layout</span>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
                 {layouts.map((layout) => {
                     const config = LAYOUT_CONFIG[layout.id];
                     const isActive = currentLayout === layout.id;
@@ -30,24 +30,24 @@ export function LayoutSelector({ currentLayout, onLayoutChange }: LayoutSelector
                         <button
                             key={layout.id}
                             onClick={() => onLayoutChange(layout.id)}
-                            className={`flex-1 p-3 rounded-xl border-2 transition-all ${isActive
-                                    ? 'border-emerald-500 bg-emerald-50 shadow-sm'
-                                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                            title={config.label}
+                            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border transition-all ${isActive
+                                ? 'border-emerald-500 bg-emerald-50'
+                                : 'border-gray-200 bg-white hover:border-gray-300'
                                 }`}
                         >
                             {/* Mini Grid Preview */}
-                            <div className={`grid ${layout.gridClass} gap-0.5 w-full aspect-square mb-2`}>
+                            <div className={`grid ${layout.gridClass} gap-px w-5 h-5`}>
                                 {Array.from({ length: config.max }).map((_, i) => (
                                     <div
                                         key={i}
-                                        className={`rounded-sm ${isActive ? 'bg-emerald-400' : 'bg-gray-300'}`}
+                                        className={`rounded-[1px] ${isActive ? 'bg-emerald-500' : 'bg-gray-300'}`}
                                     />
                                 ))}
                             </div>
-
-                            <p className={`text-[10px] font-medium text-center ${isActive ? 'text-emerald-700' : 'text-gray-600'}`}>
+                            <span className={`text-[10px] font-medium ${isActive ? 'text-emerald-700' : 'text-gray-500'}`}>
                                 {config.label}
-                            </p>
+                            </span>
                         </button>
                     );
                 })}
