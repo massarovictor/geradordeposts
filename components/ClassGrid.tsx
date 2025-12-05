@@ -139,6 +139,7 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
           <img
             src={config.backgroundImageUrl!}
             alt="Background"
+            data-background-image="true"
             className="w-full h-full object-cover"
             style={{
               filter: showBlur ? 'blur(4px)' : 'none',
@@ -176,67 +177,73 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
         <div className="w-24 h-1 rounded-full bg-gradient-to-r from-emerald-400 via-yellow-400 to-orange-400" />
       </div>
 
-      {/* MAIN CARD - Liquid Glass */}
-      <div className={`flex-1 min-h-0 backdrop-blur-2xl rounded-3xl overflow-hidden p-4 relative z-10 ring-1 ${isDark
-        ? 'bg-black/40 ring-white/10'
-        : 'bg-white/60 ring-white/40'
+      {/* MAIN CARD - Frosted glass using backdrop-blur (like the pill) */}
+      <div className={`flex-1 min-h-0 backdrop-blur-xl rounded-3xl overflow-hidden relative z-10 ring-1 ${isDark
+        ? 'bg-black/50 ring-white/10'
+        : 'bg-white/50 ring-white/40'
         }`}>
 
-        {/* Subtle inner glow */}
-        <div className={`absolute inset-0 rounded-3xl pointer-events-none ${isDark
-          ? 'shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]'
-          : 'shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)]'
-          }`} />
+        {/* Card background overlay */}
+        <div className={`absolute inset-0 ${isDark ? 'bg-black/30' : 'bg-white/30'}`} />
 
-        <div className={`grid ${layoutStyles.gridClass} auto-rows-fr ${layoutStyles.gap} h-full place-items-center relative z-10`}>
-          {slots.map((student) => (
-            <div key={student.id} className="flex flex-col items-center">
-              {/* Avatar */}
-              <div className={`${layoutStyles.avatarSize} ${layoutStyles.avatarMargin} relative`}>
-                <div className={`w-full h-full rounded-full overflow-hidden ring-2 ${isDark
-                  ? 'ring-white/20 bg-gray-800'
-                  : 'ring-white/60 bg-white'
-                  }`}>
-                  {student.imageUrl ? (
-                    <img
-                      src={student.imageUrl}
-                      alt={student.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className={`w-full h-full flex items-center justify-center ${isDark ? 'bg-gray-800 text-gray-600' : 'bg-gray-100 text-gray-300'
-                      }`}>
-                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                      </svg>
-                    </div>
-                  )}
+        {/* Content wrapper */}
+        <div className="relative z-10 p-4 h-full">
+          {/* Subtle inner glow */}
+          <div className={`absolute inset-0 rounded-3xl pointer-events-none ${isDark
+            ? 'shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]'
+            : 'shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)]'
+            }`} />
+
+          <div className={`grid ${layoutStyles.gridClass} auto-rows-fr ${layoutStyles.gap} h-full place-items-center relative z-10`}>
+            {slots.map((student) => (
+              <div key={student.id} className="flex flex-col items-center">
+                {/* Avatar */}
+                <div className={`${layoutStyles.avatarSize} ${layoutStyles.avatarMargin} relative`}>
+                  <div className={`w-full h-full rounded-full overflow-hidden ring-2 ${isDark
+                    ? 'ring-white/20 bg-gray-800'
+                    : 'ring-white/60 bg-white'
+                    }`}>
+                    {student.imageUrl ? (
+                      <img
+                        src={student.imageUrl}
+                        alt={student.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className={`w-full h-full flex items-center justify-center ${isDark ? 'bg-gray-800 text-gray-600' : 'bg-gray-100 text-gray-300'
+                        }`}>
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Name & Grade */}
+                <div className={`text-center w-full px-0.5 ${layoutStyles.maxWidth}`}>
+                  <h2
+                    className={`${layoutStyles.nameSize} font-semibold leading-tight mb-0.5 truncate ${isDark
+                      ? 'text-white'
+                      : (useAccents && !isCustom ? theme.text_dark : 'text-gray-800')
+                      }`}
+                    style={isDark ? {} : studentNameStyle}
+                  >
+                    {student.name || 'Nome do Aluno'}
+                  </h2>
+                  <p className={`${layoutStyles.gradeSize} font-normal truncate ${isDark ? 'text-white/60' : 'text-gray-500'
+                    }`}>
+                    {student.grade || 'Série / Curso'}
+                  </p>
                 </div>
               </div>
+            ))}
 
-              {/* Name & Grade */}
-              <div className={`text-center w-full px-0.5 ${layoutStyles.maxWidth}`}>
-                <h2
-                  className={`${layoutStyles.nameSize} font-semibold leading-tight mb-0.5 truncate ${isDark
-                    ? 'text-white'
-                    : (useAccents && !isCustom ? theme.text_dark : 'text-gray-800')
-                    }`}
-                  style={isDark ? {} : studentNameStyle}
-                >
-                  {student.name || 'Nome do Aluno'}
-                </h2>
-                <p className={`${layoutStyles.gradeSize} font-normal truncate ${isDark ? 'text-white/60' : 'text-gray-500'
-                  }`}>
-                  {student.grade || 'Série / Curso'}
-                </p>
-              </div>
-            </div>
-          ))}
-
-          {/* Spacers */}
-          {Array.from({ length: Math.max(0, maxSlots - slots.length) }).map((_, i) => (
-            <div key={`empty-${i}`} className={layoutStyles.avatarSize} />
-          ))}
+            {/* Spacers */}
+            {Array.from({ length: Math.max(0, maxSlots - slots.length) }).map((_, i) => (
+              <div key={`empty-${i}`} className={layoutStyles.avatarSize} />
+            ))}
+          </div>
         </div>
       </div>
 

@@ -221,34 +221,57 @@ export default function App() {
       // Card is 400px wide, so we need 1080/400 = 2.7 ratio
       const pixelRatio = EXPORT_WIDTH / 400;
 
-      // Find background image and apply scaled blur directly via DOM
-      const bgImage = cardRef.current.querySelector('img[alt="Background"]') as HTMLImageElement | null;
-      let originalFilter = '';
-      let originalTransform = '';
+      // Wait a bit to ensure everything is rendered
+      await delay(300);
 
-      if (bgImage && config.enableBackgroundBlur) {
-        originalFilter = bgImage.style.filter;
-        originalTransform = bgImage.style.transform;
-        bgImage.style.filter = `blur(${4 * pixelRatio}px)`;
-        bgImage.style.transform = 'scale(1.05)';
+      // Generate font embed CSS with Base64 to strictly enforce Neulis font in export
+      const origin = window.location.origin;
+      const fontFiles = [
+        { name: 'Neulis', weight: 400, url: `${origin}/font/NeulisAlt-Regular.otf` },
+        { name: 'Neulis', weight: 500, url: `${origin}/font/NeulisAlt-Medium.otf` },
+        { name: 'Neulis', weight: 600, url: `${origin}/font/NeulisAlt-SemiBold.otf` },
+        { name: 'Neulis', weight: 700, url: `${origin}/font/NeulisAlt-Bold.otf` },
+        { name: 'Neulis', weight: 800, url: `${origin}/font/NeulisAlt-ExtraBold.otf` },
+        { name: 'Neulis', weight: 900, url: `${origin}/font/NeulisAlt-Black.otf` },
+      ];
+
+      let fontEmbedCSS = '';
+
+      try {
+        const fontPromises = fontFiles.map(async (font) => {
+          try {
+            const response = await fetch(font.url);
+            const blob = await response.blob();
+            return new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                const base64 = reader.result as string;
+                resolve(`@font-face { font-family: '${font.name}'; src: url('${base64}') format('opentype'); font-weight: ${font.weight}; }`);
+              };
+              reader.onerror = () => resolve(''); // Skip on error
+              reader.readAsDataURL(blob);
+            });
+          } catch (e) {
+            console.error('Error loading font for export:', font.url, e);
+            return '';
+          }
+        });
+
+        const fontFaces = await Promise.all(fontPromises);
+        fontEmbedCSS = fontFaces.join('\n');
+      } catch (error) {
+        console.error('Error preparing fonts for export:', error);
       }
-
-      // Wait for styles to apply
-      await delay(50);
 
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
         pixelRatio: pixelRatio,
-        backgroundColor: '#fff',
         width: 400,
         height: 500, // 4:5 aspect ratio
+        fontEmbedCSS: fontEmbedCSS,
       });
 
-      // Restore original blur
-      if (bgImage && config.enableBackgroundBlur) {
-        bgImage.style.filter = originalFilter;
-        bgImage.style.transform = originalTransform;
-      }
+
 
       if (returnBlob) {
         // Convert data URL to blob
