@@ -23,7 +23,12 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, React.Disp
         try {
             localStorage.setItem(key, JSON.stringify(storedValue));
         } catch (error) {
-            console.warn(`Error setting localStorage key "${key}":`, error);
+            if (error instanceof DOMException && (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
+                console.error(`LocalStorage quota exceeded for key "${key}". Data will not be saved.`);
+                // Optional: You could try to clear old data or notify the user here
+            } else {
+                console.warn(`Error setting localStorage key "${key}":`, error);
+            }
         }
     }, [key, storedValue, hydrated]);
 

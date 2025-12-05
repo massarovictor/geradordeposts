@@ -177,14 +177,44 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
         <div className="w-24 h-1 rounded-full bg-gradient-to-r from-emerald-400 via-yellow-400 to-orange-400" />
       </div>
 
-      {/* MAIN CARD - Frosted glass using backdrop-blur (like the pill) */}
-      <div className={`flex-1 min-h-0 backdrop-blur-xl rounded-3xl overflow-hidden relative z-10 ring-1 ${isDark
+      {/* MAIN CARD - Manual Backdrop Blur Implementation */}
+      <div className={`flex-1 min-h-0 rounded-3xl overflow-hidden relative z-10 ring-1 ${isDark
         ? 'bg-black/50 ring-white/10'
         : 'bg-white/50 ring-white/40'
         }`}>
 
-        {/* Card background overlay */}
-        <div className={`absolute inset-0 ${isDark ? 'bg-black/30' : 'bg-white/30'}`} />
+        {/* Manual Blurred Background Layer for Export Stability */}
+        {showImage && (
+          <div className="absolute inset-0 z-[-1] overflow-hidden">
+            {/* 
+                Positioning logic:
+                The card is inside a p-5 (20px) container.
+                To align this inner image with the root background, we need to:
+                1. Make it the size of the root container (400px x 500px).
+                2. Offset it by the padding amount (-20px).
+             */}
+            <div
+              className="absolute top-[-72px] left-[-20px] w-[400px] h-[500px]"
+            >
+              <img
+                src={config.backgroundImageUrl!}
+                alt="Blurred Background"
+                className="w-full h-full object-cover"
+                style={{
+                  filter: 'blur(20px)', // Strong blur for the card
+                  transform: showBlur ? 'scale(1.05)' : 'none', // Match root scale
+                }}
+              />
+            </div>
+            {/* Overlay to darken/lighten the blur */}
+            <div className={`absolute inset-0 ${isDark ? 'bg-black/40' : 'bg-white/40'}`} />
+          </div>
+        )}
+
+        {/* Fallback for no image (solid color mode) */}
+        {!showImage && (
+          <div className={`absolute inset-0 ${isDark ? 'bg-black/30' : 'bg-white/30'} backdrop-blur-xl`} />
+        )}
 
         {/* Content wrapper */}
         <div className="relative z-10 p-4 h-full">
