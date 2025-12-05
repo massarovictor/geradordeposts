@@ -221,6 +221,21 @@ export default function App() {
       // Card is 400px wide, so we need 1080/400 = 2.7 ratio
       const pixelRatio = EXPORT_WIDTH / 400;
 
+      // Find background image and apply scaled blur directly via DOM
+      const bgImage = cardRef.current.querySelector('img[alt="Background"]') as HTMLImageElement | null;
+      let originalFilter = '';
+      let originalTransform = '';
+
+      if (bgImage && config.enableBackgroundBlur) {
+        originalFilter = bgImage.style.filter;
+        originalTransform = bgImage.style.transform;
+        bgImage.style.filter = `blur(${4 * pixelRatio}px)`;
+        bgImage.style.transform = 'scale(1.05)';
+      }
+
+      // Wait for styles to apply
+      await delay(50);
+
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
         pixelRatio: pixelRatio,
@@ -228,6 +243,12 @@ export default function App() {
         width: 400,
         height: 500, // 4:5 aspect ratio
       });
+
+      // Restore original blur
+      if (bgImage && config.enableBackgroundBlur) {
+        bgImage.style.filter = originalFilter;
+        bgImage.style.transform = originalTransform;
+      }
 
       if (returnBlob) {
         // Convert data URL to blob
@@ -561,8 +582,8 @@ export default function App() {
                     <button
                       onClick={() => updateConfig({ darkCardMode: false })}
                       className={`px-3 py-1.5 text-xs rounded-l-lg border transition-colors ${!config.darkCardMode
-                          ? 'bg-white border-gray-300 text-gray-900 font-medium'
-                          : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'
+                        ? 'bg-white border-gray-300 text-gray-900 font-medium'
+                        : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'
                         }`}
                     >
                       ☀️ Claro
@@ -570,8 +591,8 @@ export default function App() {
                     <button
                       onClick={() => updateConfig({ darkCardMode: true })}
                       className={`px-3 py-1.5 text-xs rounded-r-lg border-t border-b border-r transition-colors ${config.darkCardMode
-                          ? 'bg-gray-800 border-gray-700 text-white font-medium'
-                          : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'
+                        ? 'bg-gray-800 border-gray-700 text-white font-medium'
+                        : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'
                         }`}
                     >
                       🌙 Escuro

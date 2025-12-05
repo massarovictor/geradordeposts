@@ -139,7 +139,11 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
           <img
             src={config.backgroundImageUrl!}
             alt="Background"
-            className={`w-full h-full object-cover ${showBlur ? 'blur-sm scale-105' : ''}`}
+            className="w-full h-full object-cover"
+            style={{
+              filter: showBlur ? 'blur(4px)' : 'none',
+              transform: showBlur ? 'scale(1.05)' : 'none',
+            }}
           />
         </div>
       )}
@@ -158,9 +162,9 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
 
       {/* HEADER */}
       <div className="h-[72px] flex-shrink-0 z-10 flex flex-col items-center justify-center gap-2">
-        {/* Title - Clean, no pill */}
+        {/* Title - Neulis font */}
         <h1
-          className="font-display font-semibold text-xl tracking-normal"
+          className="font-display font-bold text-xl tracking-normal"
           style={{
             color: headerTextColor || '#ffffff',
           }}
@@ -243,18 +247,18 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
           <img src={config.logoUrl} alt="Logo" className="w-7 h-7 object-contain" />
         )}
 
-        {/* Footer Title - Inter font */}
+        {/* Footer Title - Neulis font */}
         <h3
-          className="font-sans font-semibold text-sm tracking-wide"
+          className="font-display font-semibold text-sm tracking-wide"
           style={{ color: footerTitleColor, textShadow: '0 2px 6px rgba(0,0,0,0.4)' }}
         >
           {config.footerTitle || 'Destaques'}
         </h3>
 
-        {/* Subtitle - Pill style */}
+        {/* Subtitle - Refined pill style */}
         {config.footerSubtitle && (
-          <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
-            <span className="text-xs text-white font-medium leading-none">
+          <div className="flex items-center justify-center bg-white/10 backdrop-blur-sm rounded-full px-2.5 py-1 border border-white/20">
+            <span className="font-display text-[10px] text-white/90 font-normal tracking-wide">
               {config.footerSubtitle}
             </span>
           </div>
