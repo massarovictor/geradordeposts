@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, XMarkIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 interface ImageCropperProps {
     imageUrl: string;
@@ -11,31 +11,36 @@ export function ImageCropper({ imageUrl, onConfirm, onCancel }: ImageCropperProp
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [position, setPosition] = useState({ x: 0, y: 0 });
-    const [scale, setScale] = useState(1);
+    const [userZoom, setUserZoom] = useState(1); // User-controlled zoom: 1x = fit, up to 3x
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
+    const [baseScale, setBaseScale] = useState(1); // Scale to fit image in crop area
     const imageRef = useRef<HTMLImageElement | null>(null);
 
     const cropSize = 220;
 
-    // Load image and calculate initial scale
+    // Load image and calculate base scale
     useEffect(() => {
         const img = new Image();
         img.onload = () => {
             imageRef.current = img;
             setImageDimensions({ width: img.width, height: img.height });
 
-            // Calculate initial scale so image fills the crop area
+            // Calculate base scale so the smaller dimension fills the crop area
             const minDim = Math.min(img.width, img.height);
-            const initialScale = cropSize / minDim;
-            setScale(initialScale);
+            const calculatedBaseScale = cropSize / minDim;
+            setBaseScale(calculatedBaseScale);
+            setUserZoom(1);
             setPosition({ x: 0, y: 0 });
             setImageLoaded(true);
         };
         img.src = imageUrl;
     }, [imageUrl]);
+
+    // Total scale = baseScale * userZoom
+    const totalScale = baseScale * userZoom;
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
@@ -74,8 +79,8 @@ export function ImageCropper({ imageUrl, onConfirm, onCancel }: ImageCropperProp
         setIsDragging(false);
     }, []);
 
-    const handleZoom = useCallback((delta: number) => {
-        setScale((prev) => Math.max(0.1, Math.min(5, prev + delta)));
+    const handleZoomChange = useCallback((newZoom: number) => {
+        setUserZoom(Math.max(0.5, Math.min(3, newZoom)));
     }, []);
 
     const handleConfirm = useCallback(() => {
@@ -103,28 +108,26 @@ export function ImageCropper({ imageUrl, onConfirm, onCancel }: ImageCropperProp
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, outputSize, outputSize);
 
-        // Calculate scale factor from preview to output
+        // Scale factor from preview crop area to output canvas
         const scaleFactor = outputSize / cropSize;
 
-        // Calculate the visible part of the image in the crop circle
-        const scaledImgWidth = img.width * scale;
-        const scaledImgHeight = img.height * scale;
+        // Calculate the final scaled dimensions using totalScale
+        const scaledWidth = img.width * totalScale * scaleFactor;
+        const scaledHeight = img.height * totalScale * scaleFactor;
 
-        // Position in output canvas
-        const drawX = (outputSize / 2) - (scaledImgWidth / 2 * scaleFactor) + (position.x * scaleFactor);
-        const drawY = (outputSize / 2) - (scaledImgHeight / 2 * scaleFactor) + (position.y * scaleFactor);
-        const drawWidth = scaledImgWidth * scaleFactor;
-        const drawHeight = scaledImgHeight * scaleFactor;
+        // Position needs to account for the scale and be relative to center
+        const drawX = (outputSize / 2) - (scaledWidth / 2) + (position.x * scaleFactor);
+        const drawY = (outputSize / 2) - (scaledHeight / 2) + (position.y * scaleFactor);
 
-        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+        ctx.drawImage(img, drawX, drawY, scaledWidth, scaledHeight);
 
         const croppedUrl = canvas.toDataURL('image/png', 1.0);
         onConfirm(croppedUrl);
-    }, [position, scale, onConfirm, cropSize]);
+    }, [position, totalScale, onConfirm, cropSize]);
 
-    // Calculate display dimensions maintaining aspect ratio
-    const displayWidth = imageDimensions.width * scale;
-    const displayHeight = imageDimensions.height * scale;
+    // Calculate display dimensions
+    const displayWidth = imageDimensions.width * totalScale;
+    const displayHeight = imageDimensions.height * totalScale;
 
     return (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
@@ -181,32 +184,34 @@ export function ImageCropper({ imageUrl, onConfirm, onCancel }: ImageCropperProp
                 {/* Zoom Controls */}
                 <div className="px-6 py-4 bg-gray-50 flex items-center justify-center gap-4">
                     <button
-                        onClick={() => handleZoom(-0.1)}
-                        className="w-10 h-10 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 flex items-center justify-center text-xl font-bold shadow-sm"
+                        onClick={() => handleZoomChange(userZoom - 0.25)}
+                        disabled={userZoom <= 0.5}
+                        className="w-10 h-10 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-sm transition-colors"
                     >
-                        −
+                        <MinusIcon className="w-5 h-5" />
                     </button>
 
                     <div className="flex-1 max-w-[150px]">
                         <input
                             type="range"
-                            min="0.1"
+                            min="0.5"
                             max="3"
-                            step="0.05"
-                            value={scale}
-                            onChange={(e) => setScale(parseFloat(e.target.value))}
-                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            step="0.1"
+                            value={userZoom}
+                            onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                         />
-                        <div className="text-center text-xs text-gray-500 mt-1">
-                            {Math.round(scale * 100)}%
+                        <div className="text-center text-xs text-gray-500 mt-1 font-medium">
+                            {Math.round(userZoom * 100)}%
                         </div>
                     </div>
 
                     <button
-                        onClick={() => handleZoom(0.1)}
-                        className="w-10 h-10 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 flex items-center justify-center text-xl font-bold shadow-sm"
+                        onClick={() => handleZoomChange(userZoom + 0.25)}
+                        disabled={userZoom >= 3}
+                        className="w-10 h-10 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-sm transition-colors"
                     >
-                        +
+                        <PlusIcon className="w-5 h-5" />
                     </button>
                 </div>
 

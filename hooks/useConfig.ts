@@ -19,6 +19,11 @@ export const defaultConfig: PageConfig = {
     applyThemeToAccents: true,
     cardLayout: CardLayout.GRID_3X3,
     darkCardMode: false,
+    // Grid container defaults
+    gridBackgroundColor: '#ffffff',
+    gridBackgroundOpacity: 50,
+    gridBackgroundPattern: 'none',
+    gridTintWithTheme: false,
 };
 
 export interface UseConfigReturn {

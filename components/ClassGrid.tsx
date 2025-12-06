@@ -60,20 +60,24 @@ const getLayoutStyles = (layout: CardLayout) => {
         gridClass: 'grid-cols-2 grid-rows-2',
         avatarSize: 'w-[5rem] h-[5rem]',
         avatarMargin: 'mb-2',
-        nameSize: 'text-[0.85rem]',
-        gradeSize: 'text-[0.65rem]',
-        maxWidth: 'max-w-[9rem]',
-        gap: 'gap-x-4 gap-y-4',
+        nameSize: 'text-[1.05rem]',
+        gradeSize: 'text-[0.75rem]',
+        maxWidth: 'max-w-[10rem]',
+        gap: 'gap-x-8 gap-y-4',
+        maxNameChars: 22,
+        maxGradeChars: 18,
       };
     case CardLayout.GRID_3X2:
       return {
         gridClass: 'grid-cols-3 grid-rows-2',
         avatarSize: 'w-[4.2rem] h-[4.2rem]',
         avatarMargin: 'mb-1.5',
-        nameSize: 'text-[0.75rem]',
-        gradeSize: 'text-[0.6rem]',
-        maxWidth: 'max-w-[8rem]',
-        gap: 'gap-x-3 gap-y-3',
+        nameSize: 'text-[0.95rem]',
+        gradeSize: 'text-[0.65rem]',
+        maxWidth: 'max-w-[9rem]',
+        gap: 'gap-x-6 gap-y-3.5',
+        maxNameChars: 18,
+        maxGradeChars: 16,
       };
     case CardLayout.GRID_3X3:
     default:
@@ -81,12 +85,79 @@ const getLayoutStyles = (layout: CardLayout) => {
         gridClass: 'grid-cols-3 grid-rows-3',
         avatarSize: 'w-[3.8rem] h-[3.8rem]',
         avatarMargin: 'mb-1.5',
-        nameSize: 'text-[0.7rem]',
-        gradeSize: 'text-[0.55rem]',
-        maxWidth: 'max-w-[7.25rem]',
-        gap: 'gap-x-2.5 gap-y-2.5',
+        nameSize: 'text-[0.9rem]',
+        gradeSize: 'text-[0.6rem]',
+        maxWidth: 'max-w-[8.5rem]',
+        gap: 'gap-x-5 gap-y-3',
+        maxNameChars: 14,
+        maxGradeChars: 12,
       };
   }
+};
+
+const abbreviateName = (name: string, maxChars: number) => {
+  if (!name) return 'Nome do Aluno';
+  const trimmed = name.trim();
+  if (trimmed.length <= maxChars) return trimmed;
+
+  const parts = trimmed.split(/\s+/);
+  if (parts.length >= 2) {
+    const first = parts[0];
+    const lastInitial = parts[parts.length - 1].charAt(0);
+    const candidate = `${first} ${lastInitial}.`;
+    if (candidate.length <= maxChars) return candidate;
+  }
+
+  return `${trimmed.slice(0, maxChars - 1)}…`;
+};
+
+const abbreviateText = (text: string | undefined | null, maxChars: number, fallback: string) => {
+  if (!text) return fallback;
+  const trimmed = text.trim();
+  if (trimmed.length <= maxChars) return trimmed;
+  return `${trimmed.slice(0, maxChars - 1)}…`;
+};
+
+const mapCourseAbbrev = (course?: string | null) => {
+  if (!course) return course;
+  const c = course.trim().toLowerCase();
+  if (c === 'desenvolvimento de sistemas') return 'D. de Sistemas';
+  if (c === 'redes de computadores') return 'Redes de C.';
+  return course;
+};
+
+// Helpers para garantir contraste mínimo em temas customizados
+const hexToRgb = (hex: string) => {
+  const normalized = hex.replace('#', '');
+  const value = normalized.length === 3
+    ? normalized.split('').map((c) => c + c).join('')
+    : normalized;
+  const int = parseInt(value, 16);
+  if (Number.isNaN(int) || (value.length !== 6)) return null;
+  return {
+    r: (int >> 16) & 255,
+    g: (int >> 8) & 255,
+    b: int & 255,
+  };
+};
+
+const relativeLuminance = ({ r, g, b }: { r: number; g: number; b: number }) => {
+  const f = (c: number) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+};
+
+const accessibleColor = (color: string | undefined, isDark: boolean, fallbackLight: string, fallbackDark: string) => {
+  if (!color) return isDark ? fallbackLight : fallbackDark;
+  const rgb = hexToRgb(color);
+  if (!rgb) return isDark ? fallbackLight : fallbackDark;
+  const lum = relativeLuminance(rgb);
+  // Se muito claro em fundo claro, use fallback escuro. Se muito escuro em modo dark, use fallback claro.
+  if (!isDark && lum > 0.82) return fallbackDark;
+  if (isDark && lum < 0.2) return fallbackLight;
+  return color;
 };
 
 export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students, config }, ref) => {
@@ -125,12 +196,24 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
   // Minimal styles
   const pillContainerStyle = isCustom && useAccents ? { borderColor: `${customAccentColor}40` } : {};
   const pillTextStyle = isCustom && useAccents ? { color: customAccentColor } : {};
-  const studentNameStyle = isCustom && useAccents ? { color: customAccentColor } : {};
+  const nameColor = isCustom && useAccents
+    ? accessibleColor(customAccentColor, isDark, '#f8fafc', '#0f172a')
+    : undefined;
+  const gradeColor = isCustom && useAccents
+    ? accessibleColor(customAccentColor, isDark, '#f8fafc', '#0f172a')
+    : undefined;
+  const studentNameStyle = nameColor ? { color: nameColor } : (isCustom && useAccents ? { color: customAccentColor } : {});
+  const gradeStyle = gradeColor ? { color: gradeColor } : (isCustom && useAccents ? { color: customAccentColor } : {});
+  const gradeClass = isDark
+    ? 'text-white/80'
+    : (useAccents && !isCustom ? theme.text_dark : 'text-gray-700');
+  // Footer is always on the theme overlay (dark background), so we use the color directly without contrast adjustment
+  const footerAccessibleColor = config.footerTitleColor || footerTitleColor;
 
   return (
     <div
       ref={ref}
-      className="relative w-full aspect-instagram flex flex-col p-4 overflow-hidden"
+      className="relative w-full aspect-instagram flex flex-col px-10 py-4 overflow-hidden"
       style={{ minWidth: '400px', maxWidth: '400px' }}
     >
       {/* BACKGROUND */}
@@ -162,7 +245,7 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
       <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/5 via-transparent to-black/20 pointer-events-none" />
 
       {/* HEADER */}
-      <div className="h-[60px] flex-shrink-0 z-10 flex flex-col items-center justify-center gap-2">
+      <div className="h-[60px] flex-shrink-0 z-10 flex flex-col items-center justify-center gap-1">
         {/* Title - Neulis font */}
         <h1
           className="font-display font-bold text-xl tracking-normal"
@@ -179,53 +262,86 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
 
       {/* MAIN CARD - Manual Backdrop Blur Implementation */}
       <div className={`flex-1 min-h-0 rounded-3xl overflow-hidden relative z-10 ring-1 ${isDark
-        ? 'bg-black/50 ring-white/10'
-        : 'bg-white/50 ring-white/40'
+        ? 'ring-white/10'
+        : 'ring-white/40'
         }`}>
 
-        {/* Manual Blurred Background Layer for Export Stability */}
+        {/* Layer 1: Base background - solid color fallback */}
+        <div className={`absolute inset-0 z-0 ${isDark ? 'bg-gray-900' : 'bg-white'}`} />
+
+        {/* Layer 2: Blurred background image (if exists) */}
         {showImage && (
-          <div className="absolute inset-0 z-[-1] overflow-hidden">
-            {/* 
-                Positioning logic:
-                The card is inside a p-4 (16px) container.
-                Header is 60px.
-                To align this inner image with the root background, we need to:
-                1. Make it the size of the root container (400px x 500px).
-                2. Offset it by the padding amount (-16px) and header height (-60px).
-             */}
-            <div
-              className="absolute top-[-60px] left-[-16px] w-[400px] h-[500px]"
-            >
+          <div className="absolute inset-0 z-[1] overflow-hidden">
+            <div className="absolute top-[-60px] left-[-16px] w-[400px] h-[500px]">
               <img
                 src={config.backgroundImageUrl!}
                 alt="Blurred Background"
                 className="w-full h-full object-cover"
                 style={{
-                  filter: 'blur(20px)', // Strong blur for the card
-                  transform: showBlur ? 'scale(1.05)' : 'none', // Match root scale
+                  filter: 'blur(20px)',
+                  transform: showBlur ? 'scale(1.05)' : 'none',
                 }}
               />
             </div>
-            {/* Overlay to darken/lighten the blur */}
             <div className={`absolute inset-0 ${isDark ? 'bg-black/40' : 'bg-white/40'}`} />
           </div>
         )}
 
-        {/* Fallback for no image (solid color mode) */}
-        {!showImage && (
-          <div className={`absolute inset-0 ${isDark ? 'bg-black/30' : 'bg-white/30'} backdrop-blur-xl`} />
+        {/* Layer 3: Custom Grid Background Color */}
+        {config.gridBackgroundColor && !config.gridTintWithTheme && (
+          <div
+            className="absolute inset-0 z-[2]"
+            style={{
+              backgroundColor: config.gridBackgroundColor,
+              opacity: (config.gridBackgroundOpacity ?? 50) / 100,
+            }}
+          />
         )}
 
-        {/* Content wrapper */}
-        <div className="relative z-10 p-4 h-full">
+        {/* Layer 3 (alt): Theme Tint Overlay */}
+        {config.gridTintWithTheme && (
+          <div
+            className={`absolute inset-0 z-[2] ${!isCustom ? theme.bg_solid : ''}`}
+            style={{
+              backgroundColor: isCustom ? customBaseColor : undefined,
+              opacity: (config.gridBackgroundOpacity ?? 50) / 100
+            }}
+          />
+        )}
+
+        {/* Layer 4: Grid Background Pattern */}
+        {config.gridBackgroundPattern && config.gridBackgroundPattern !== 'none' && (
+          <div
+            className="absolute inset-0 z-[3] pointer-events-none"
+            style={{
+              opacity: 0.4,
+              backgroundImage: config.gridBackgroundPattern === 'dots'
+                ? `radial-gradient(circle, ${isDark ? '#ffffff' : '#000000'} 1.5px, transparent 1.5px)`
+                : config.gridBackgroundPattern === 'grid'
+                  ? `linear-gradient(${isDark ? '#ffffff30' : '#00000015'} 1px, transparent 1px), linear-gradient(90deg, ${isDark ? '#ffffff30' : '#00000015'} 1px, transparent 1px)`
+                  : config.gridBackgroundPattern === 'diagonal'
+                    ? `repeating-linear-gradient(45deg, transparent, transparent 8px, ${isDark ? '#ffffff15' : '#00000010'} 8px, ${isDark ? '#ffffff15' : '#00000010'} 16px)`
+                    : config.gridBackgroundPattern === 'radial'
+                      ? `radial-gradient(circle at center, ${isDark ? '#ffffff30' : '#00000015'} 0%, transparent 60%)`
+                      : 'none',
+              backgroundSize: config.gridBackgroundPattern === 'dots'
+                ? '14px 14px'
+                : config.gridBackgroundPattern === 'grid'
+                  ? '24px 24px'
+                  : '100% 100%',
+            }}
+          />
+        )}
+
+        {/* Content wrapper - Layer 10 */}
+        <div className="relative z-10 p-6 h-full">
           {/* Subtle inner glow */}
           <div className={`absolute inset-0 rounded-3xl pointer-events-none ${isDark
             ? 'shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]'
             : 'shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)]'
             }`} />
 
-          <div className={`grid ${layoutStyles.gridClass} auto-rows-fr ${layoutStyles.gap} h-full place-items-center relative z-10`}>
+          <div className={`grid ${layoutStyles.gridClass} auto-rows-fr ${layoutStyles.gap} h-full place-items-center relative z-10 px-0 py-0`}>
             {slots.map((student) => (
               <div key={student.id} className="flex flex-col items-center">
                 {/* Avatar */}
@@ -254,17 +370,21 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
                 {/* Name & Grade */}
                 <div className={`text-center w-full px-0.5 ${layoutStyles.maxWidth}`}>
                   <h2
-                    className={`${layoutStyles.nameSize} font-semibold leading-tight mb-0.5 truncate ${isDark
+                    className={`${layoutStyles.nameSize} font-semibold leading-[1.05] mb-0.5 truncate ${isDark
                       ? 'text-white'
                       : (useAccents && !isCustom ? theme.text_dark : 'text-gray-800')
                       }`}
-                    style={isDark ? {} : studentNameStyle}
+                    style={studentNameStyle}
+                    title={student.name || 'Nome do Aluno'}
                   >
-                    {student.name || 'Nome do Aluno'}
+                    {abbreviateName(student.name, layoutStyles.maxNameChars)}
                   </h2>
-                  <p className={`${layoutStyles.gradeSize} font-normal truncate ${isDark ? 'text-white/60' : 'text-gray-500'
-                    }`}>
-                    {student.grade || 'Série / Curso'}
+                  <p
+                    className={`${layoutStyles.gradeSize} font-medium truncate ${gradeClass}`}
+                    style={gradeStyle}
+                    title={([student.year, mapCourseAbbrev(student.course) || student.course].filter(Boolean).join(' ') || student.grade || 'Série / Curso')}
+                  >
+                    {([student.year, mapCourseAbbrev(student.course) || student.course].filter(Boolean).join(' ') || student.grade || 'Série / Curso')}
                   </p>
                 </div>
               </div>
@@ -288,7 +408,7 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
         {/* Footer Title - Neulis font */}
         <h3
           className="font-display font-semibold text-sm tracking-wide"
-          style={{ color: footerTitleColor, textShadow: '0 2px 6px rgba(0,0,0,0.4)' }}
+          style={{ color: footerAccessibleColor, textShadow: '0 2px 6px rgba(0,0,0,0.4)' }}
         >
           {config.footerTitle || 'Destaques'}
         </h3>

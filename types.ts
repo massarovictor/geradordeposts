@@ -25,6 +25,11 @@ export interface PageConfig {
   applyThemeToAccents: boolean;
   cardLayout: CardLayout;
   darkCardMode: boolean;
+  // Grid container background customization
+  gridBackgroundColor?: string;
+  gridBackgroundOpacity?: number;
+  gridBackgroundPattern?: 'none' | 'dots' | 'grid' | 'diagonal' | 'radial';
+  gridTintWithTheme?: boolean;
 }
 
 export enum ThemeColor {
