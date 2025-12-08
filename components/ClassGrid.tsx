@@ -288,11 +288,11 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
         )}
 
         {/* Layer 3: Custom Grid Background Color */}
-        {config.gridBackgroundColor && !config.gridTintWithTheme && (
+        {!config.gridTintWithTheme && (
           <div
-            className="absolute inset-0 z-[2]"
+            className="absolute inset-0 z-[5]"
             style={{
-              backgroundColor: config.gridBackgroundColor,
+              backgroundColor: config.gridBackgroundColor || (isDark ? '#1f2937' : '#ffffff'),
               opacity: (config.gridBackgroundOpacity ?? 50) / 100,
             }}
           />
@@ -301,7 +301,7 @@ export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students,
         {/* Layer 3 (alt): Theme Tint Overlay */}
         {config.gridTintWithTheme && (
           <div
-            className={`absolute inset-0 z-[2] ${!isCustom ? theme.bg_solid : ''}`}
+            className={`absolute inset-0 z-[5] ${!isCustom ? theme.bg_solid : ''}`}
             style={{
               backgroundColor: isCustom ? customBaseColor : undefined,
               opacity: (config.gridBackgroundOpacity ?? 50) / 100
