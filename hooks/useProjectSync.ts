@@ -110,13 +110,35 @@ export function useProjectSync(userId?: string | null) {
     return data;
   }, [currentProjectId]);
 
+  // Save status
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const pendingPayload = useRef<ProjectPayload | null>(null);
+
   // Save project data (debounced)
   const saveRemote = useCallback((payload: ProjectPayload) => {
     if (!supabase || !currentProjectId || !userId) return;
+    pendingPayload.current = payload;
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
-    saveTimeout.current = setTimeout(() => {
-      saveProject(currentProjectId, userId, payload);
+    saveTimeout.current = setTimeout(async () => {
+      if (!pendingPayload.current) return;
+      setIsSaving(true);
+      await saveProject(currentProjectId, userId, pendingPayload.current);
+      setIsSaving(false);
+      setLastSaved(new Date());
+      pendingPayload.current = null;
     }, 800);
+  }, [currentProjectId, userId]);
+
+  // Immediate save (for manual save button)
+  const saveNow = useCallback(async (payload: ProjectPayload) => {
+    if (!supabase || !currentProjectId || !userId) return;
+    if (saveTimeout.current) clearTimeout(saveTimeout.current);
+    setIsSaving(true);
+    await saveProject(currentProjectId, userId, payload);
+    setIsSaving(false);
+    setLastSaved(new Date());
+    pendingPayload.current = null;
   }, [currentProjectId, userId]);
 
   return {
@@ -139,6 +161,9 @@ export function useProjectSync(userId?: string | null) {
     isLoadingRemote,
     loadRemote,
     saveRemote,
+    saveNow,
+    isSaving,
+    lastSaved,
 
     supabaseEnabled,
   };

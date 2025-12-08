@@ -1,6 +1,6 @@
 ﻿
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
-import { ArrowDownTrayIcon, PlusIcon, TrashIcon, PencilSquareIcon, ChevronLeftIcon, ChevronRightIcon, UsersIcon, DocumentArrowDownIcon, ArrowLeftIcon, SwatchIcon, DocumentArrowUpIcon, ArrowPathIcon, RectangleGroupIcon, UserGroupIcon, ArrowRightCircleIcon, PhotoIcon } from '@heroicons/react/24/outline';
+import { ArrowDownTrayIcon, PlusIcon, TrashIcon, PencilSquareIcon, ChevronLeftIcon, ChevronRightIcon, UsersIcon, DocumentArrowDownIcon, ArrowLeftIcon, SwatchIcon, DocumentArrowUpIcon, ArrowPathIcon, RectangleGroupIcon, UserGroupIcon, ArrowRightCircleIcon, PhotoIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import { toPng } from 'html-to-image';
 import JSZip from 'jszip';
 
@@ -95,6 +95,9 @@ export default function App() {
     isLoadingRemote,
     loadRemote,
     saveRemote,
+    saveNow,
+    isSaving,
+    lastSaved,
     supabaseEnabled,
   } = useProjectSync(user?.id);
 
@@ -211,6 +214,15 @@ export default function App() {
     if (!supabaseEnabled || !currentProjectId || isLoadingRemote || !user) return;
     saveRemote({ config, currentPage, students });
   }, [supabaseEnabled, currentProjectId, isLoadingRemote, user, config, currentPage, students, saveRemote]);
+
+  // Periodic auto-save every 30 seconds as backup
+  useEffect(() => {
+    if (!supabaseEnabled || !currentProjectId || !user) return;
+    const interval = setInterval(() => {
+      saveNow({ config, currentPage, students });
+    }, 30000); // 30 seconds
+    return () => clearInterval(interval);
+  }, [supabaseEnabled, currentProjectId, user, config, currentPage, students, saveNow]);
 
   // Sync page with total pages
   useEffect(() => {
@@ -671,6 +683,39 @@ export default function App() {
                 >
                   Sair
                 </button>
+              )}
+              {/* Save Button and Status */}
+              {supabaseEnabled && currentProjectId && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => saveNow({ config, currentPage, students })}
+                    disabled={isSaving}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${isSaving
+                      ? 'bg-gray-100 text-gray-400 cursor-wait'
+                      : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm'
+                      }`}
+                  >
+                    {isSaving ? (
+                      <>
+                        <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Salvando...
+                      </>
+                    ) : (
+                      <>
+                        <CloudArrowUpIcon className="w-3 h-3" />
+                        Salvar
+                      </>
+                    )}
+                  </button>
+                  {lastSaved && !isSaving && (
+                    <span className="text-[10px] text-gray-400">
+                      Salvo às {lastSaved.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           </div>

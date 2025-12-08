@@ -96,8 +96,8 @@ const getLayoutStyles = (layout: CardLayout) => {
 };
 
 const abbreviateName = (name: string, maxChars: number) => {
-  if (!name) return 'Nome do Aluno';
-  const trimmed = name.trim();
+  if (!name) return 'NOME DO ALUNO';
+  const trimmed = name.trim().toUpperCase(); // Always uppercase
   if (trimmed.length <= maxChars) return trimmed;
 
   const parts = trimmed.split(/\s+/);
