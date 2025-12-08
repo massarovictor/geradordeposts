@@ -198,11 +198,13 @@ export default function App() {
     });
   }, [supabaseEnabled, currentProjectId, user, loadRemote, setStudents, setConfig]);
 
-  // Persist state changes
+  // Persist state changes to localStorage (only if Supabase is NOT enabled)
   useEffect(() => {
     if (!hydrated) return;
+    // Skip localStorage when Supabase is active to avoid quota issues
+    if (supabaseEnabled && currentProjectId) return;
     setSavedState({ students, config, currentPage });
-  }, [students, config, currentPage, hydrated, setSavedState]);
+  }, [students, config, currentPage, hydrated, setSavedState, supabaseEnabled, currentProjectId]);
 
   // Sync remoto (debounced) no Supabase
   useEffect(() => {
