@@ -161,7 +161,7 @@ const accessibleColor = (color: string | undefined, isDark: boolean, fallbackLig
 };
 
 export const ClassGrid = forwardRef<HTMLDivElement, ClassGridProps>(({ students, config }, ref) => {
-  const theme = ThemeStyles[config.themeColor];
+  const theme = ThemeStyles[config.themeColor] || ThemeStyles[ThemeColor.GREEN];
   const layout = config.cardLayout || CardLayout.GRID_3X3;
   const layoutConfig = LAYOUT_CONFIG[layout];
   const layoutStyles = getLayoutStyles(layout);
