@@ -73,11 +73,29 @@ export function useMasterStudents(
     }
   }, [supabaseEnabled, initialLoadDone, loadAll]);
 
+  // Normalize course name for comparison (handles abbreviations)
+  const normalizeCourse = (course: string | undefined | null): string => {
+    if (!course) return '';
+    const lower = course.trim().toLowerCase();
+    if (lower.includes('redes') || lower.includes('computadores')) return 'redes';
+    if (lower.includes('sistemas') || lower.includes('desenv') || lower.includes('desenvolvimento') || lower.startsWith('d.')) return 'sistemas';
+    if (lower.includes('admin')) return 'administracao';
+    if (lower.includes('comercio') || lower.includes('comércio')) return 'comercio';
+    if (lower.includes('finanças') || lower.includes('financas')) return 'financas';
+    if (lower.includes('frut')) return 'fruticultura';
+    if (lower.includes('agro')) return 'agronegocio';
+    return lower;
+  };
+
   // Filter students locally using useMemo
   const students = useMemo(() => {
     return allStudents.filter((s) => {
       if (filters.year && s.year !== filters.year) return false;
-      if (filters.course && s.course !== filters.course) return false;
+      if (filters.course) {
+        const normalizedFilter = normalizeCourse(filters.course);
+        const normalizedStudent = normalizeCourse(s.course);
+        if (normalizedFilter !== normalizedStudent) return false;
+      }
       if (filters.search && !s.name.toLowerCase().includes(filters.search.toLowerCase())) return false;
       return true;
     });

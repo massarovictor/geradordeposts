@@ -119,6 +119,9 @@ export default function App() {
   const [authPassword, setAuthPassword] = useState('');
   const [showMasterSelector, setShowMasterSelector] = useState(false);
 
+  // Track which project has been loaded to prevent re-loading on visibility change
+  const projectLoadedRef = useRef<string | null>(null);
+
   // Força navegação para dashboard se não há projeto selecionado
   useEffect(() => {
     if (!currentProjectId && activeView === 'editor') {
@@ -193,11 +196,17 @@ export default function App() {
   // Load remoto do Supabase (uma vez quando projeto é selecionado)
   useEffect(() => {
     if (!supabaseEnabled || !currentProjectId || !user) return;
+
+    // Only load if this project hasn't been loaded yet
+    if (projectLoadedRef.current === currentProjectId) return;
+
     loadRemote().then((data) => {
       if (!data) return;
       setStudents(data.students);
       setConfig(data.config);
       setCurrentPage(data.currentPage ?? 0);
+      // Mark this project as loaded
+      projectLoadedRef.current = currentProjectId;
     });
   }, [supabaseEnabled, currentProjectId, user, loadRemote, setStudents, setConfig]);
 

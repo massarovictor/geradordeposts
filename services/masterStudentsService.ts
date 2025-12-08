@@ -43,7 +43,17 @@ export async function listMasterStudents(filters: MasterStudentFilters = {}): Pr
   let query = supabase.from(TABLE).select('*').order('name', { ascending: true });
 
   if (filters.year) query = query.eq('year', filters.year);
-  if (filters.course) query = query.eq('course', filters.course);
+  // Handle course abbreviations by matching key parts
+  if (filters.course) {
+    const courseLower = filters.course.toLowerCase();
+    if (courseLower.includes('redes') || courseLower.includes('computadores')) {
+      query = query.or('course.ilike.%redes%,course.ilike.%computadores%');
+    } else if (courseLower.includes('sistemas') || courseLower.includes('desenv') || courseLower.includes('desenvolvimento')) {
+      query = query.or('course.ilike.%sistemas%,course.ilike.%desenv%,course.ilike.%desenvolvimento%');
+    } else {
+      query = query.ilike('course', `%${filters.course}%`);
+    }
+  }
   if (filters.search) query = query.ilike('name', `%${filters.search}%`);
 
   const { data, error } = await query;
